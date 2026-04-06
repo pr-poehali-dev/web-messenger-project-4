@@ -1,6 +1,14 @@
 import { useState } from 'react';
-import { currentUser } from '@/data/mockData';
 import Icon from '@/components/ui/icon';
+
+interface UserData {
+  display_name?: string;
+  username?: string;
+  avatar_initials?: string;
+  avatar_color?: string;
+  status?: string;
+  [key: string]: unknown;
+}
 
 const THEMES = [
   { id: 'purple', label: 'Пульс', from: '#a855f7', to: '#00d4ff' },
@@ -11,9 +19,15 @@ const THEMES = [
 
 const STATUSES = ['В сети', 'Не беспокоить', 'Недоступен', 'Невидимка'];
 
-export default function ProfilePanel() {
-  const [name, setName] = useState(currentUser.name);
-  const [status, setStatus] = useState(currentUser.status);
+interface ProfilePanelProps {
+  user: object;
+  onLogout: () => void;
+}
+
+export default function ProfilePanel({ user, onLogout }: ProfilePanelProps) {
+  const u = user as UserData;
+  const [name, setName] = useState(u.display_name || '');
+  const [status, setStatus] = useState(u.status || 'В сети');
   const [theme, setTheme] = useState('purple');
   const [notifications, setNotifications] = useState(true);
   const [sounds, setSounds] = useState(true);
@@ -39,7 +53,7 @@ export default function ProfilePanel() {
               className="w-24 h-24 rounded-3xl flex items-center justify-center text-2xl font-black text-white shadow-2xl glow-purple animate-float"
               style={{ background: `linear-gradient(135deg, #a855f7, #00d4ff)` }}
             >
-              {currentUser.avatar}
+              {u.avatar_initials || '??'}
             </div>
             <button className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center hover:bg-neon-purple/20 hover:border-neon-purple/40 transition-all">
               <Icon name="Camera" size={14} className="text-muted-foreground" />
@@ -47,8 +61,8 @@ export default function ProfilePanel() {
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-neon-green rounded-full border-2 border-background" />
           </div>
 
-          <h1 className="font-display font-black text-2xl gradient-text">{currentUser.name}</h1>
-          <p className="text-muted-foreground text-sm mt-1">@pulse.user • ID: 10001</p>
+          <h1 className="font-display font-black text-2xl gradient-text">{u.display_name}</h1>
+          <p className="text-muted-foreground text-sm mt-1">@{u.username}</p>
 
           {/* Status selector */}
           <div className="flex gap-2 mt-3 flex-wrap justify-center">
@@ -76,8 +90,8 @@ export default function ProfilePanel() {
           <div className="space-y-3">
             {[
               { label: 'Имя', value: name, icon: 'User', editable: true },
-              { label: 'Телефон', value: currentUser.phone || '', icon: 'Phone', editable: false },
-              { label: 'Email', value: currentUser.email || '', icon: 'Mail', editable: false },
+              { label: 'Логин', value: `@${u.username || ''}`, icon: 'AtSign', editable: false },
+              { label: 'Статус', value: status, icon: 'Activity', editable: false },
             ].map(field => (
               <div key={field.label} className="flex items-center gap-3 p-3.5 bg-card rounded-2xl border border-border hover-glow transition-all">
                 <div className="w-9 h-9 rounded-xl bg-neon-purple/10 flex items-center justify-center flex-shrink-0">
@@ -161,7 +175,7 @@ export default function ProfilePanel() {
           {saved ? '✓ Сохранено' : 'Сохранить изменения'}
         </button>
 
-        <button className="w-full py-3 rounded-2xl text-sm text-destructive bg-destructive/10 border border-destructive/20 hover:bg-destructive/20 transition-all font-medium">
+        <button onClick={onLogout} className="w-full py-3 rounded-2xl text-sm text-destructive bg-destructive/10 border border-destructive/20 hover:bg-destructive/20 transition-all font-medium">
           Выйти из аккаунта
         </button>
       </div>

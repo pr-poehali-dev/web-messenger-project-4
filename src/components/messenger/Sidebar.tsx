@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import Icon from '@/components/ui/icon';
-import { currentUser } from '@/data/mockData';
+import { api } from '@/lib/api';
 
 interface SidebarProps {
   activeTab: string;
@@ -16,6 +15,7 @@ const navItems = [
 ];
 
 export default function Sidebar({ activeTab, onTabChange, totalUnread }: SidebarProps) {
+  const user = api.getUser() as { avatar_initials?: string; avatar_color?: string } | null;
   return (
     <div className="flex flex-col items-center gap-3 py-4 px-2 glass border-r border-border w-16 h-full">
       {/* Logo */}
@@ -62,9 +62,9 @@ export default function Sidebar({ activeTab, onTabChange, totalUnread }: Sidebar
       <button
         onClick={() => onTabChange('profile')}
         className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold text-white hover:scale-105 transition-transform relative"
-        style={{ background: `linear-gradient(135deg, ${currentUser.color}, #00d4ff)` }}
+        style={{ background: `linear-gradient(135deg, ${user?.avatar_color || '#a855f7'}, #00d4ff)` }}
       >
-        {currentUser.avatar}
+        {user?.avatar_initials || '??'}
         <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-neon-green rounded-full border-2 border-background" />
       </button>
     </div>

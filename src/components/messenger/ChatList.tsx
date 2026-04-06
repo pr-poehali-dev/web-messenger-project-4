@@ -1,22 +1,32 @@
 import { useState } from 'react';
-import { chats, Chat } from '@/data/mockData';
+import { RealChat } from '@/pages/Index';
 import Icon from '@/components/ui/icon';
 
 interface ChatListProps {
-  selectedChat: Chat | null;
-  onSelectChat: (chat: Chat) => void;
+  chats: RealChat[];
+  selectedChat: RealChat | null;
+  onSelectChat: (chat: RealChat) => void;
 }
 
-export default function ChatList({ selectedChat, onSelectChat }: ChatListProps) {
+export default function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
   const [filter, setFilter] = useState<'all' | 'personal' | 'groups'>('all');
   const [search, setSearch] = useState('');
 
   const filtered = chats.filter(c => {
-    const matchesFilter = filter === 'all' || (filter === 'groups' ? c.isGroup : !c.isGroup);
+    const matchesFilter = filter === 'all' || (filter === 'groups' ? c.is_group : !c.is_group);
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.lastMessage.toLowerCase().includes(search.toLowerCase());
+      c.last_message.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+
+  const formatTime = (iso: string | null) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    if (diff < 86400000) return d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+    return 'Вчера';
+  };
 
   return (
     <div className="flex flex-col h-full w-72 border-r border-border bg-background">
@@ -29,7 +39,6 @@ export default function ChatList({ selectedChat, onSelectChat }: ChatListProps) 
           </button>
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Icon name="Search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -40,7 +49,6 @@ export default function ChatList({ selectedChat, onSelectChat }: ChatListProps) 
           />
         </div>
 
-        {/* Filters */}
         <div className="flex gap-1 mt-3">
           {[{ id: 'all', label: 'Все' }, { id: 'personal', label: 'Личные' }, { id: 'groups', label: 'Группы' }].map(f => (
             <button
@@ -60,6 +68,14 @@ export default function ChatList({ selectedChat, onSelectChat }: ChatListProps) 
 
       {/* List */}
       <div className="flex-1 overflow-y-auto px-2 pb-2">
+        {filtered.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-32 text-center px-4">
+            <Icon name="MessageCircle" size={28} className="text-muted-foreground/40 mb-2" />
+            <p className="text-xs text-muted-foreground">
+              {chats.length === 0 ? 'Нет чатов. Начните новый разговор!' : 'Ничего не найдено'}
+            </p>
+          </div>
+        )}
         {filtered.map((chat, i) => (
           <button
             key={chat.id}
@@ -71,7 +87,6 @@ export default function ChatList({ selectedChat, onSelectChat }: ChatListProps) 
             }`}
             style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'forwards' }}
           >
-            {/* Avatar */}
             <div className="relative flex-shrink-0">
               <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold text-white shadow-lg"
@@ -79,24 +94,20 @@ export default function ChatList({ selectedChat, onSelectChat }: ChatListProps) 
               >
                 {chat.avatar}
               </div>
-              {chat.online && !chat.isGroup && (
-                <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-neon-green rounded-full border-2 border-background" />
-              )}
-              {chat.isGroup && (
+              {chat.is_group && (
                 <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-neon-cyan/80 rounded-full border-2 border-background flex items-center justify-center">
                   <Icon name="Users" size={8} className="text-background" />
                 </span>
               )}
             </div>
 
-            {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-sm text-foreground truncate">{chat.name}</span>
-                <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-1">{chat.time}</span>
+                <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-1">{formatTime(chat.last_message_at)}</span>
               </div>
               <div className="flex items-center justify-between mt-0.5">
-                <p className="text-xs text-muted-foreground truncate">{chat.lastMessage}</p>
+                <p className="text-xs text-muted-foreground truncate">{chat.last_message || 'Нет сообщений'}</p>
                 {chat.unread > 0 && (
                   <span className="ml-2 flex-shrink-0 min-w-[18px] h-[18px] bg-neon-purple text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
                     {chat.unread}
